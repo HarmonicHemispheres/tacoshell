@@ -1,7 +1,8 @@
 # project specific
 .taco/
 taco.toml
-
+*.duckdb
+ignore_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
