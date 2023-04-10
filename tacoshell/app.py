@@ -47,15 +47,16 @@ app = typer.Typer(
 
 @app.command()
 def chat(
-    debug: bool = False,
-    cfg: Path = Path("taco.toml")
+    cfg: Path = Path("taco.toml"),
+    new: bool = False,
+    no_banner: bool = False
 ):
 
     if not cfg.exists():
         cfg = None
 
-    shell = Shell(cfg=cfg)
-    shell.start()
+    shell = Shell(cfg=cfg, new_db=new)
+    shell.start(show_welcome=not no_banner)
 
 @app.command()
 def init():

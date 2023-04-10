@@ -23,12 +23,13 @@ class AiEngine:
 
         openai.api_key = self.openai_key
 
-    def get_resp(self, que: str):
+    def get_resp(self, que: str, messages=[]):
         if not self.openai_key:
             raise Exception("No OpenAi Developer Key Found!")
         
         # prepare query
-
+        user_content = {"role": "user", "content": que}
+        messages.append(user_content)
 
         # list models
         # models = openai.Model.list()
@@ -37,14 +38,12 @@ class AiEngine:
         # print(models.data[0].id)
 
         # create a completion
-        # completion = openai.Completion.create(model="ada", prompt="Hello world")
         completion = openai.ChatCompletion.create(
             model=self.model, 
-            messages=[{"role": "user", "content": que}],
+            messages=messages,
             )
-
-
-        return completion.choices[0].message.content
+        messages.append({"role": "assistant", "content": completion.choices[0].message.content})
+        return messages
     
 
     def get_code(self, text):
@@ -62,7 +61,7 @@ class AiEngine:
         table = Table(title="OpenAi Models")
         table.add_column("id", style="blue")
         table.add_column("Owner", style="green")
-        # table.add_column("Allow Fine Tuning", style="green")
+        table.add_column("Allow Fine Tuning", style="green")
         # table.add_column("Allow Create Engine", style="green")
         # table.add_column("Allow Sampling", style="green")
         table.add_column("Created", justify="right", style="cyan")
@@ -72,7 +71,7 @@ class AiEngine:
             table.add_row(
                 m.get("id"),
                 m.get("owned_by"),
-                # str(m.get("permission")[0].get("allow_fine_tuning")),
+                str(m.get("permission")[0].get("allow_fine_tuning")),
                 # str(m.get("permission")[0].get("allow_create_engine")),
                 # str(m.get("permission")[0].get("allow_sampling")),
                 date.strftime('%Y-%m-%d %H:%M:%S'),
