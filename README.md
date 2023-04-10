@@ -1,11 +1,4 @@
 
-![Taco Version](https://img.shields.io/badge/Taco-0.1.0-black?color=black&style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-black?color=black&style=for-the-badge)
-![License](https://img.shields.io/badge/Python-3.8+-MIT?color=black&style=for-the-badge&logo=Python)
-
-<center>
-</center>
-
 <p align="center">
     <img src="./art/0.1_wallpaper.jpg" />
     <br />
