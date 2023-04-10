@@ -41,7 +41,7 @@
 
 <br>
 
-## 4. Data is stored in `DuckDB` making your own analysis on chat sessions easy!
+## 4. Data is stored in `DuckDB` making analysis on chat sessions easy!
 <img alt="duckdb persistant sessions" src="static/duckdb_session.png" width="80%">
 
 
@@ -64,7 +64,7 @@ taco init
 
 ### Launch Shell
 ```
-❯ taco chat
+taco chat
 ```
 
 
