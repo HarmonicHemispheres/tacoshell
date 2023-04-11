@@ -20,7 +20,7 @@ import os
 
 CON = Console()
 CMD_TEXT = """
-<TEXT>               --  ask openai a question
+<TEXT>               --  ask openai a question in the current chat session
 
 .quit                --  exit taco shell
 .help                --  list builtin commands
@@ -30,6 +30,7 @@ CMD_TEXT = """
 .sessions            --  list chat sessions
 .models              --  shows available OpenAi models
 .set-session <NAME>  --  switch to a different chat session
+.set-system <TEXT>   --  set a chat session 'system'. who is the ai? how do they respond?
 .export              --  export the current chat session to csv
 .export-csv          --  export the current chat session to csv
 .export-json         --  export the current chat session to json
@@ -139,11 +140,16 @@ class Shell:
                         # self.db.select_table("chat_content", where=f"session_ref = '{self.active_session.session_id}'")
                         self.db.show_session_content(self.active_session.session_id, self.active_session.name)
 
-                    elif cmd.startswith((".set-session", ".s=")):
+                    elif cmd.startswith((".set-session")):
                         session_name: str = cmd.split(" ",maxsplit=1)[1]
                         session_name = session_name.strip()
                         session = self.db.set_active_session(session_name=session_name)
                         self.active_session = session
+
+                    elif cmd.startswith((".set-system")):
+                        content: str = cmd.split(" ",maxsplit=1)[1]
+                        self.db.set_session_system(self.active_session.session_id, content)
+                        CON.print(f"New System Protocal Is Defined for '{self.active_session.name}'")
                     
                     elif cmd.startswith(".export"):
                         session_name: str = self.active_session.name

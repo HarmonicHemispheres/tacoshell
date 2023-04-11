@@ -28,6 +28,7 @@ class MChatContent(BaseModel):
     chars: int = 0
     token_est: int = 0
     created: datetime = datetime.now()
+    updated: datetime = datetime.now()
 
 class MAbout(BaseModel):
     created: datetime = datetime.now()
@@ -147,21 +148,6 @@ class Database:
         self.conn.execute(sql)
         self.conn.commit()
 
-    def select_session(self, name:str, session_id:str="") -> MChatSessions:
-        sql = f"SELECT * FROM chat_sessions WHERE name = '{name}' OR session_id = '{session_id}'"
-        self.conn.execute(sql)
-        record = self.conn.fetchone()
-        if record:
-            return MChatSessions(
-                session_id=record[0],
-                name=record[1],
-                is_active=record[2],
-                created=record[3],
-                updated=record[4],
-                )
-        else:
-            return None
-
     def set_active_session(self,session_name:str) -> MChatSessions:
         
         # -- set old active session to inactive
@@ -187,7 +173,67 @@ class Database:
             self.create_chat_session(session)
 
         return session
+
+    def set_session_system(self, session_id: str, content: str):
+        sql = f"""
+SELECT 
+    session_ref,
+    message_id,
+    created, 
+    chars,
+    role,
+    token_est,
+    content
+FROM chat_content 
+WHERE session_ref = '{session_id}' AND role = 'system'
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        
+        # -- system already exists, attempt to change
+        if result:
+            sql = f"""
+UPDATE chat_content SET 
+    updated = '{datetime.now()}',
+    content = '{content}'
+WHERE session_ref = '{session_id}' AND role = 'system';
+            """
+            cursor.execute(sql)
+            cursor.commit()
+        
+        # -- system does not exist
+        else:
+            model = MChatContent(
+                message_id=self.gen_guid(),
+                session_ref=session_id,
+                role="system",
+                content=content,
+                chars=len(content),
+                token_est=len(content.split(" ")),
+                created=datetime.now()
+            )
+            sql = self.get_insert_sql("chat_content", model)
+            cursor.execute(sql)
+            cursor.commit()
+
+
+        
     
+    def select_session(self, name:str, session_id:str="") -> MChatSessions:
+        sql = f"SELECT * FROM chat_sessions WHERE name = '{name}' OR session_id = '{session_id}'"
+        self.conn.execute(sql)
+        record = self.conn.fetchone()
+        if record:
+            return MChatSessions(
+                session_id=record[0],
+                name=record[1],
+                is_active=record[2],
+                created=record[3],
+                updated=record[4],
+                )
+        else:
+            return None
         
     def select_session_content(self, session_id, as_dict=True):
         cursor = self.conn.cursor()
@@ -225,6 +271,43 @@ class Database:
             updated=record[4],
             )
 
+    def show_session_content(self, session_id, session_name):
+
+        sql = f"""
+SELECT 
+    session_ref,
+    message_id,
+    created, 
+    chars,
+    token_est,
+    role,
+    content
+FROM chat_content 
+WHERE session_ref = '{session_id}'
+"""
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+
+        table = Table(title=f"Session: {session_name} ({session_id})")
+        table.add_column("message_id", style="green4")
+        table.add_column("created", style="white")
+        table.add_column("chars", style="green")
+        table.add_column("token_est", style="green")
+        table.add_column("role", style="green")
+        table.add_column("content", style="white", overflow="fold")
+
+        for row in cursor.fetchall():
+            table.add_row(
+                str(row[1]),
+                row[2].strftime('%Y-%m-%d %H:%M'),
+                str(row[3]),
+                str(row[4]),
+                str(row[5]),
+                str(row[6]),
+            )
+
+        rich.print(table)
+
 
     # ------------------------------------------ #
     # ---------- HELPER FUNCTIONS
@@ -256,42 +339,6 @@ class Database:
             result = self.conn.sql(sql)
         result.show()
 
-    def show_session_content(self, session_id, session_name):
-
-        sql = f"""
-SELECT 
-    session_ref,
-    message_id,
-    created, 
-    chars,
-    role,
-    token_est,
-    content
-FROM chat_content 
-WHERE session_ref = '{session_id}'
-"""
-        cursor = self.conn.cursor()
-        cursor.execute(sql)
-
-        table = Table(title=f"Session: {session_name} ({session_id})")
-        table.add_column("message_id", style="blue")
-        table.add_column("created", style="white")
-        table.add_column("chars", style="green")
-        table.add_column("token_est", style="green")
-        table.add_column("role", style="green")
-        table.add_column("content", style="white", overflow="fold")
-
-        for row in cursor.fetchall():
-            table.add_row(
-                str(row[1]),
-                row[2].strftime('%Y-%m-%d %H:%M'),
-                str(row[3]),
-                str(row[4]),
-                str(row[5]),
-                str(row[6]),
-            )
-
-        rich.print(table)
 
 
     ##########################################

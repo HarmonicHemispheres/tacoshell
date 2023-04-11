@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tacoshell"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["harmonichemispheres <robby.boney@harmonichemispheres.com>"]
 license = "MIT"

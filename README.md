@@ -26,30 +26,46 @@
 </p>
 
 <br>
+<br>
 
 # 🌮 Why Tacos for Dinner?
-## 1. Because they are delicious! 🌮😄
+<b style="font-size:20px;"><i>Because they are delicious!</i>🤩</b>
+<details>
+    <summary>
+        <b style="font-size:20px;">Taco lets you view session history with OpenAi models easily</b>
+    </summary>
+    <img alt="bad taco text" src="static/show_sessions.png" width="80%">
+</details>
+<details>
+    <summary>
+        <b style="font-size:20px;">Easily see available OpenAi models you have access to</b>
+    </summary>
+    <img alt="model list" src="static/openai_models_list.png" width="80%">
+</details>
+<details>
+    <summary>
+        <b style="font-size:20px;">Data is stored in `DuckDB` making analysis on chat sessions easy!</b>
+    </summary>
+    <img alt="duckdb persistant sessions" src="static/duckdb_session.png" width="80%">
+</details>
+<details>
+    <summary>
+        <b style="font-size:20px;">Export Chat Sessions for external uses and analysis</b>
+    </summary>
+    <img alt="export options" src="static/export_options.png" width="80%">
+</details>
+<details>
+    <summary>
+        <b style="font-size:20px;">Set custom protocals for GPT to follow (the model's 'SYSTEM')</b>
+    </summary>
+    <img alt="jar jar jokes" src="static/jar-jar-jokes.png" width="95%">
+</details>
 
-## 2. Taco lets you view session history with OpenAi models easily
-<img alt="bad taco text" src="static/show_sessions.png" width="70%">
 
 <br>
-
-## 3. Easily see available OpenAi models you have access to
-<img alt="model list" src="static/openai_models_list.png" width="70%">
-
-<br>
-
-## 4. Data is stored in `DuckDB` making analysis on chat sessions easy!
-<img alt="duckdb persistant sessions" src="static/duckdb_session.png" width="70%">
-
-## 5. Export Chat Sessions for external uses and analysis 
-<img alt="export options" src="static/export_options.png" width="70%">
-
-
 <br>
 <br>
-<br>
+
 
 # 🌮 Get Cookin!
 ### Install
@@ -73,12 +89,13 @@ taco chat
 <br>
 <br>
 
+
 # 🦾  Commands
 
 ```
 🌮 .help
 
-<TEXT>               --  ask openai a question
+<TEXT>               --  ask openai a question in the current chat session
 
 .quit                --  exit taco shell
 .help                --  list builtin commands
@@ -88,6 +105,7 @@ taco chat
 .sessions            --  list chat sessions
 .models              --  shows available OpenAi models
 .set-session <NAME>  --  switch to a different chat session
+.set-system <TEXT>   --  set a chat session 'system'. who is the ai? how do they respond?
 .export              --  export the current chat session to csv
 .export-csv          --  export the current chat session to csv
 .export-json         --  export the current chat session to json
@@ -107,8 +125,9 @@ taco chat --new
 <br>
 <br>
 
+
 # 🛣️ Roadmap & Ideas
-- [ ] add way to set a system message for a chat session to guide the ai model
+- [x] add way to set a system message for a chat session to guide the ai model
 - [x] chat session content export options (simple)
   - [x] json
   - [x] csv
@@ -126,3 +145,5 @@ taco chat --new
 - [ ] add a `watch` mode, where agent tasks can perform scheduled jobs and triggers can cause a specific chat session to be prompted with some data.
 - [ ] add a documentation site in sphinx
 - [ ] add streamlit app to interact with Taco 
+- [ ] add `.info` command with details about OpenAi docs, taco statistics, python package versions and other useful details
+😆
