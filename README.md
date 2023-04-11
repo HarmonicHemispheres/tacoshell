@@ -10,7 +10,7 @@
     <br />
     <a href="https://github.com/HarmonicHemispheres/tacoshell">
     <img
-        src="https://img.shields.io/badge/🌮 Taco-0.1.0-black?color=black&style=for-the-badge"
+        src="https://img.shields.io/badge/🌮 Taco-0.1.1-black?color=black&style=for-the-badge"
         alt="Tacoshell version"
     /></a>
     <img
