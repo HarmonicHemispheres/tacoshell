@@ -23,7 +23,6 @@
     <img
         src="https://img.shields.io/badge/Powered By DUCKDB-black?color=black&style=for-the-badge&logo=DuckDB"
         alt="Credit to DuckDB"/>
- 
 </p>
 
 <br>
@@ -32,18 +31,20 @@
 ## 1. Because they are delicious! 🌮😄
 
 ## 2. Taco lets you view session history with OpenAi models easily
-<img alt="bad taco text" src="static/show_sessions.png" width="80%">
+<img alt="bad taco text" src="static/show_sessions.png" width="70%">
 
 <br>
 
 ## 3. Easily see available OpenAi models you have access to
-<img alt="model list" src="static/openai_models_list.png" width="80%">
+<img alt="model list" src="static/openai_models_list.png" width="70%">
 
 <br>
 
 ## 4. Data is stored in `DuckDB` making analysis on chat sessions easy!
-<img alt="duckdb persistant sessions" src="static/duckdb_session.png" width="80%">
+<img alt="duckdb persistant sessions" src="static/duckdb_session.png" width="70%">
 
+## 5. Export Chat Sessions for external uses and analysis 
+<img alt="export options" src="static/export_options.png" width="70%">
 
 
 <br>
@@ -72,7 +73,7 @@ taco chat
 <br>
 <br>
 
-# 🌮  Commands
+# 🦾  Commands
 
 ```
 🌮 .help
@@ -81,14 +82,17 @@ taco chat
 
 .quit                --  exit taco shell
 .help                --  list builtin commands
-.clear               --  clears the console
-.clr                 --  clears the console
+.clear/.clr          --  clears the console
 .cfg                 --  show the config settings
 .session             --  show the details of the current session and its history
 .sessions            --  list chat sessions
-.ai-models           --  shows available OpenAi models
-.set-session=<NAME>  --  switch to a different chat session
-.set-s=<NAME>        --  switch to a different chat session
+.models              --  shows available OpenAi models
+.set-session <NAME>  --  switch to a different chat session
+.export              --  export the current chat session to csv
+.export-csv          --  export the current chat session to csv
+.export-json         --  export the current chat session to json
+.export-xlsx         --  export the current chat session to xlsx
+.export-html         --  export the current chat session to html
 ```
 
 <br>
@@ -98,3 +102,27 @@ this command will drop the local `taco.db` database and start a fresh one.
 ```
 taco chat --new
 ```
+
+<br>
+<br>
+<br>
+
+# 🛣️ Roadmap & Ideas
+- [ ] add way to set a system message for a chat session to guide the ai model
+- [x] chat session content export options (simple)
+  - [x] json
+  - [x] csv
+  - [x] xlsx
+  - [x] html
+- [ ] file import system to add file content to chat context without copy paste
+- [ ] add system to use sql to query the `taco.duckdb` database from the taco shell
+- [ ] add "Chat Commands" that allow GPT to specify commands that will run predefined python functions to enable a auto-GPT system
+  - [ ] add config setting for custom "Chat Commands"
+- [ ] add way to modify temperature of models for variable control of model response behavior
+- [ ] add way to remove\inactivate chat sessions
+- [ ] add way to deactivate specific messages in chat session to shape session focus
+- [ ] add update or chat content migration mechanism for database updates
+- [ ] add application logging to `.log` files for enhanced troubleshooting and details
+- [ ] add a `watch` mode, where agent tasks can perform scheduled jobs and triggers can cause a specific chat session to be prompted with some data.
+- [ ] add a documentation site in sphinx
+- [ ] add streamlit app to interact with Taco 

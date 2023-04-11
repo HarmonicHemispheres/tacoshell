@@ -3,10 +3,11 @@ from pathlib import Path
 import duckdb
 from pydantic import BaseModel
 import pandas
+import json
 import uuid
+import pkg_resources
 from datetime import datetime
 from rich.table import Table
-# from rich import print
 import rich
 
 # ------------------------------------------ #
@@ -24,13 +25,26 @@ class MChatContent(BaseModel):
     session_ref: str = ""
     role: str = ""    # user, system, assistant
     content: str = ""
+    chars: int = 0
+    token_est: int = 0
     created: datetime = datetime.now()
 
+class MAbout(BaseModel):
+    created: datetime = datetime.now()
+    taco_version: str = ""
+
+class MFiles(BaseModel):
+    file_id: str = ""
+    name: str = ""
+    type: str = ""
+    source_path: str = ""
+    content: str = ""
+    created: datetime = datetime.now()
+    updated: datetime = datetime.now()
 
 
-class MODELS:
-    sessions = MChatSessions
-    content = MChatContent 
+
+
 
 # ------------------------------------------ #
 # ---------- CONTROLLER CLASS
@@ -40,14 +54,29 @@ class Database:
         self.file: Path = file
         self.tables = {
             "chat_sessions": MChatSessions(),
-            "chat_content": MChatContent()
+            "chat_content": MChatContent(),
+            "about": MAbout(),
+            "files": MFiles()
         }
         self.conn = None
-        self.connect()
+        try:
+            self.connect()
+        except:
+            raise Exception(f"Cannot connect to DB: {self.file}")
         if create_new:
             if self.file.exists():
                 self.drop()
             self.create_ddl()
+            self.setup_static()
+
+    def setup_static(self):
+        # create info
+        about = MAbout(taco_version=pkg_resources.get_distribution("tacoshell").version)
+        sql = self.get_insert_sql("about",model=about)
+        self.conn.execute(sql)
+        self.conn.commit()
+
+        # 
 
     def drop(self):
         for tname, table in self.tables.items():
@@ -161,7 +190,8 @@ class Database:
     
         
     def select_session_content(self, session_id, as_dict=True):
-        self.conn.execute(f"""
+        cursor = self.conn.cursor()
+        cursor.execute(f"""
         SELECT 
             message_id,
             session_ref,
@@ -171,7 +201,7 @@ class Database:
         WHERE session_ref = '{session_id}'
         """)
 
-        data = [row for row in self.conn.fetchall()]
+        data = [row for row in cursor.fetchall()]
 
         if as_dict:
             return [
@@ -182,8 +212,9 @@ class Database:
         
     def get_active_session(self) -> MChatSessions:
         sql = f"SELECT * FROM chat_sessions WHERE is_active = TRUE"
-        self.conn.execute(sql)
-        record = self.conn.fetchone()
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        record = cursor.fetchone()
         if not record:
             return None
         return MChatSessions(
@@ -227,24 +258,70 @@ class Database:
 
     def show_session_content(self, session_id, session_name):
 
-        sql = f"SELECT message_id,session_ref,role,content,created FROM chat_content WHERE session_ref = '{session_id}'"
-        self.conn.execute(sql)
+        sql = f"""
+SELECT 
+    session_ref,
+    message_id,
+    created, 
+    chars,
+    role,
+    token_est,
+    content
+FROM chat_content 
+WHERE session_ref = '{session_id}'
+"""
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
 
         table = Table(title=f"Session: {session_name} ({session_id})")
         table.add_column("message_id", style="blue")
-        table.add_column("role", style="green")
         table.add_column("created", style="white")
+        table.add_column("chars", style="green")
+        table.add_column("token_est", style="green")
+        table.add_column("role", style="green")
         table.add_column("content", style="white", overflow="fold")
 
-        for row in self.conn.fetchall():
+        for row in cursor.fetchall():
             table.add_row(
-                str(row[0]),
-                str(row[2]),
-                row[4].strftime('%Y-%m-%d %H:%M:%S'),
+                str(row[1]),
+                row[2].strftime('%Y-%m-%d %H:%M'),
                 str(row[3]),
+                str(row[4]),
+                str(row[5]),
+                str(row[6]),
             )
 
         rich.print(table)
+
+
+    ##########################################
+    # --------  EXPORTERS
+    ##########################################
+    def export_chat_session(self, session_id:str, out_path: Path, ext="csv"):
+        sql = f"""
+SELECT 
+    session_ref,
+    message_id,
+    created, 
+    chars,
+    role,
+    token_est,
+    content
+FROM chat_content 
+WHERE session_ref = '{session_id}'
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        df = cursor.df()
+
+        if ext == "csv":
+            df.to_csv(out_path)
+        elif ext == "json":
+            df.to_json(out_path, indent=2, orient="records")
+        elif ext == "xlsx":
+            df.to_excel(out_path)
+        elif ext == "html":
+            df.to_html(out_path)
 
         
     
