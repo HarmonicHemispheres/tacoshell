@@ -106,6 +106,8 @@ taco chat
 .models              --  shows available OpenAi models
 .set-session <NAME>  --  switch to a different chat session
 .set-system <TEXT>   --  set a chat session 'system'. who is the ai? how do they respond?
+.rm-session          --  deactivate the current session
+.rm-session <NAME>   --  deactivate a specific session
 .export              --  export the current chat session to csv
 .export-csv          --  export the current chat session to csv
 .export-json         --  export the current chat session to json
