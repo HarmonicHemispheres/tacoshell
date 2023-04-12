@@ -127,23 +127,36 @@ taco chat --new
 
 
 # 🛣️ Roadmap & Ideas
-- [x] add way to set a system message for a chat session to guide the ai model
-- [x] chat session content export options (simple)
+### Long Term Memory
+- [ ] 🔧 add simple system to allow for infinite conversation
+- [ ] 🔧 add long term memory database system for memory aware infinite conversation
+
+## File Import System
+- [ ] 🔧 add file import system to add file content to chat context without copy paste
+- [ ] 🔧 add reference to current working directory and way to change it. (could be used for file importing)
+
+### Export System
+- [x] 🔧 chat session content export options (simple)
   - [x] json
   - [x] csv
   - [x] xlsx
   - [x] html
-- [ ] file import system to add file content to chat context without copy paste
-- [ ] add system to use sql to query the `taco.duckdb` database from the taco shell
-- [ ] add "Chat Commands" that allow GPT to specify commands that will run predefined python functions to enable a auto-GPT system
+
+### System Protocals
+- [x] 🔧 add way to set a system message for a chat session to guide the ai model
+
+
+### Other
+- [ ] 🔧 add system to use sql to query the `taco.duckdb` database from the taco shell
+- [ ] 🔧 add "Chat Commands" that allow GPT to specify commands that will run predefined python functions to enable a auto-GPT system
   - [ ] add config setting for custom "Chat Commands"
-- [ ] add way to modify temperature of models for variable control of model response behavior
-- [ ] add way to remove\inactivate chat sessions
-- [ ] add way to deactivate specific messages in chat session to shape session focus
-- [ ] add update or chat content migration mechanism for database updates
-- [ ] add application logging to `.log` files for enhanced troubleshooting and details
-- [ ] add a `watch` mode, where agent tasks can perform scheduled jobs and triggers can cause a specific chat session to be prompted with some data.
-- [ ] add a documentation site in sphinx
-- [ ] add streamlit app to interact with Taco 
-- [ ] add `.info` command with details about OpenAi docs, taco statistics, python package versions and other useful details
-😆
+- [ ] 🔧 add way to modify temperature of models for variable control of model response behavior
+- [x] 🔧 add way to remove\inactivate chat sessions
+- [ ] 🔧 add way to deactivate specific messages in chat session to shape session focus
+- [ ] 🔧 add update or chat content migration mechanism for database updates
+- [ ] 🔧 add application logging to `.log` files for enhanced troubleshooting and details
+- [ ] 🔧 add a `watch` mode, where agent tasks can perform scheduled jobs and triggers can cause a specific chat session to be prompted with some data.
+- [ ] 🔧 add a documentation site in sphinx
+- [ ] 🔧 add streamlit app to interact with Taco 
+- [ ] 🔧 add `.info` command with details about OpenAi docs, taco statistics, python package versions and other useful details
+- [ ] ♻️ refactor chat_content table to include more data about session

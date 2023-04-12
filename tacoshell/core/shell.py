@@ -31,6 +31,8 @@ CMD_TEXT = """
 .models              --  shows available OpenAi models
 .set-session <NAME>  --  switch to a different chat session
 .set-system <TEXT>   --  set a chat session 'system'. who is the ai? how do they respond?
+.rm-session          --  deactivate the current session
+.rm-session <NAME>   --  deactivate a specific session
 .export              --  export the current chat session to csv
 .export-csv          --  export the current chat session to csv
 .export-json         --  export the current chat session to json
@@ -129,7 +131,7 @@ class Shell:
                         CON.clear()
                     
                     elif cmd.startswith(".sessions"):
-                        self.db.select_table("chat_sessions")
+                        self.db.select_table("chat_sessions", where="active = 1")
                     
                     elif cmd.startswith(".models"):
                         models, table = self.ai_engine.get_chat_models()
@@ -151,6 +153,19 @@ class Shell:
                         self.db.set_session_system(self.active_session.session_id, content)
                         CON.print(f"New System Protocal Is Defined for '{self.active_session.name}'")
                     
+                    elif cmd.startswith((".rm-session")):
+                        content: str = cmd.split(" ",maxsplit=1)
+                        if len(content) > 1:
+                            sess = content[1]
+                            self.db.deactivate_session(session)
+                        else:
+                            sess = self.active_session.name
+                            self.db.deactivate_session(sess)
+                            CON.print(f"Session Removed: '{sess}'")
+                        
+                        session = self.db.set_active_session(session_name="DEFAULT")
+                        self.active_session = session
+
                     elif cmd.startswith(".export"):
                         session_name: str = self.active_session.name
                         guid = self.db.gen_guid()
@@ -192,32 +207,34 @@ class Shell:
                         
                     else:
                         messages = self.ai_engine.get_resp(cmd, messages=messages)
+                        content = messages[-2].get("content")
                         self.db.create_chat_content(
                             MChatContent(
                                 message_id=self.db.gen_guid(),
                                 session_ref=self.active_session.session_id,
                                 role=messages[-2].get("role"),
-                                content=messages[-2].get("content"),
-                                chars=len(messages[-2].get("content")),
-                                token_est=len(messages[-2].get("content").split(" ")),
+                                content=content,
+                                chars=len(content),
+                                token_est=len(content)/self.db.token_est_factor,
                                 created=datetime.now()
                             )
                         )
+                        content = messages[-1].get("content")
                         self.db.create_chat_content(
                             MChatContent(
                                 message_id=self.db.gen_guid(),
                                 session_ref=self.active_session.session_id,
                                 role=messages[-1].get("role"),
-                                content=messages[-1].get("content"),
-                                chars=len(messages[-1].get("content")),
-                                token_est=len(messages[-1].get("content").split(" ")),
+                                content=content,
+                                chars=len(content),
+                                token_est=len(content)/self.db.token_est_factor,
                                 created=datetime.now()
                             )
                         )
 
                         # -- show response
                         if len(messages) > 0:
-                            CON.print(f"🤖  {messages[-1].get('content')}\n")
+                            CON.print(f"\n🤖  {messages[-1].get('content')}\n")
 
                 except Exception as error:
                     import traceback

@@ -31,12 +31,6 @@ class AiEngine:
         user_content = {"role": "user", "content": que}
         messages.append(user_content)
 
-        # list models
-        # models = openai.Model.list()
-
-        # print the first model's id
-        # print(models.data[0].id)
-
         # create a completion
         completion = openai.ChatCompletion.create(
             model=self.model, 

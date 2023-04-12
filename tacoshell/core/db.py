@@ -19,6 +19,7 @@ class MChatSessions(BaseModel):
     is_active: bool = False
     created: datetime = datetime.now()
     updated: datetime = datetime.now()
+    active: int = 1
 
 class MChatContent(BaseModel):
     message_id: str = ""
@@ -29,6 +30,7 @@ class MChatContent(BaseModel):
     token_est: int = 0
     created: datetime = datetime.now()
     updated: datetime = datetime.now()
+    active: int = 1
 
 class MAbout(BaseModel):
     created: datetime = datetime.now()
@@ -42,6 +44,7 @@ class MFiles(BaseModel):
     content: str = ""
     created: datetime = datetime.now()
     updated: datetime = datetime.now()
+    active: int = 1
 
 
 
@@ -69,6 +72,11 @@ class Database:
                 self.drop()
             self.create_ddl()
             self.setup_static()
+
+
+    @property
+    def token_est_factor(self):
+        return 3.7
 
     def setup_static(self):
         # create info
@@ -109,6 +117,9 @@ class Database:
 
     def connect(self):
         self.conn = duckdb.connect(str(self.file), read_only=False)
+    
+    def close(self):
+        self.conn.close()
 
     def create_ddl(self):
         for tname, table in self.tables.items():
@@ -139,14 +150,30 @@ class Database:
     # ---------- CRUD
     # ------------------------------------------ #
     def create_chat_session(self, session: MChatSessions):
+        # -- create default system protocal
         sql = self.get_insert_sql("chat_sessions", session)
-        self.conn.execute(sql)
-        self.conn.commit()
-    
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        cursor.commit()
+
     def create_chat_content(self, content: MChatContent):
         sql = self.get_insert_sql("chat_content", content)
-        self.conn.execute(sql)
-        self.conn.commit()
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        cursor.commit()
+
+    def deactivate_session(self,session_name:str):
+        if session_name == "DEFAULT":
+            raise Exception("Cannot Remove the Default Session!")
+        sql = f"""
+UPDATE chat_sessions SET 
+    updated = '{datetime.now()}',
+    active = 0
+WHERE name like '{session_name}' AND active = 1;
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        cursor.commit()
 
     def set_active_session(self,session_name:str) -> MChatSessions:
         
@@ -160,7 +187,7 @@ class Database:
         # -- create or set new active session
         session: MChatSessions = self.select_session(session_name)
         if session:
-            sql = f"UPDATE chat_sessions SET is_active=TRUE WHERE session_id = '{session.session_id}'"
+            sql = f"UPDATE chat_sessions SET is_active=TRUE WHERE session_id = '{session.session_id}' AND active = 1"
             self.conn.execute(sql)
             self.conn.commit()
 
@@ -171,6 +198,18 @@ class Database:
                         is_active=True
                       )
             self.create_chat_session(session)
+            
+            # -- create default system protocal
+            default_protocal = "you are a informative assistant"
+            chat_content = MChatContent(message_id=self.gen_guid(),
+                                        session_ref=session.session_id,
+                                        role="system",
+                                        content=default_protocal,
+                                        chars=len(default_protocal),
+                                        token_est=len(default_protocal)/self.token_est_factor,
+                                        created=datetime.now()
+                                        )
+            self.create_chat_content(chat_content)
 
         return session
 
@@ -185,7 +224,7 @@ SELECT
     token_est,
     content
 FROM chat_content 
-WHERE session_ref = '{session_id}' AND role = 'system'
+WHERE session_ref = '{session_id}' AND role = 'system' AND active = 1
         """
         cursor = self.conn.cursor()
         cursor.execute(sql)
@@ -197,7 +236,7 @@ WHERE session_ref = '{session_id}' AND role = 'system'
 UPDATE chat_content SET 
     updated = '{datetime.now()}',
     content = '{content}'
-WHERE session_ref = '{session_id}' AND role = 'system';
+WHERE session_ref = '{session_id}' AND role = 'system' AND active = 1;
             """
             cursor.execute(sql)
             cursor.commit()
@@ -221,7 +260,7 @@ WHERE session_ref = '{session_id}' AND role = 'system';
         
     
     def select_session(self, name:str, session_id:str="") -> MChatSessions:
-        sql = f"SELECT * FROM chat_sessions WHERE name = '{name}' OR session_id = '{session_id}'"
+        sql = f"SELECT * FROM chat_sessions WHERE name = '{name}' OR session_id = '{session_id}' AND active = 1"
         self.conn.execute(sql)
         record = self.conn.fetchone()
         if record:
@@ -239,12 +278,12 @@ WHERE session_ref = '{session_id}' AND role = 'system';
         cursor = self.conn.cursor()
         cursor.execute(f"""
         SELECT 
-            message_id,
-            session_ref,
-            role,
-            content 
-        FROM chat_content 
-        WHERE session_ref = '{session_id}'
+            tbl.message_id,
+            tbl.session_ref,
+            tbl.role,
+            tbl.content 
+        FROM chat_content tbl
+        WHERE tbl.session_ref = '{session_id}' AND tbl.active = 1
         """)
 
         data = [row for row in cursor.fetchall()]
@@ -272,7 +311,7 @@ WHERE session_ref = '{session_id}' AND role = 'system';
             )
 
     def show_session_content(self, session_id, session_name):
-
+        chars,tokens = self.session_char_tokens(session_id)
         sql = f"""
 SELECT 
     session_ref,
@@ -283,12 +322,15 @@ SELECT
     role,
     content
 FROM chat_content 
-WHERE session_ref = '{session_id}'
+WHERE session_ref = '{session_id}' AND active = 1
 """
         cursor = self.conn.cursor()
         cursor.execute(sql)
 
-        table = Table(title=f"Session: {session_name} ({session_id})")
+        table = Table(
+            title=f"Session: {session_name} ({session_id})",
+            caption=f"chars:{chars} ~tokens:{tokens}"
+            )
         table.add_column("message_id", style="green4")
         table.add_column("created", style="white")
         table.add_column("chars", style="green")
@@ -371,4 +413,23 @@ WHERE session_ref = '{session_id}'
             df.to_html(out_path)
 
         
-    
+    ##########################################
+    # --------  STATS and ANALYSIS
+    ##########################################
+
+    def session_char_tokens(self, session_id: str):
+        """ returns (character count, token est. count) """
+        sql = f"""
+SELECT session_ref, SUM(chars) c, SUM(token_est) t, 
+FROM chat_content 
+WHERE session_ref = '{session_id}' AND active = 1
+GROUP BY session_ref
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        record = cursor.fetchone()
+
+        if record:
+            return record[1], round(record[2]/self.token_est_factor,3)
+        else:
+            return 0, 0
